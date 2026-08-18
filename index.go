@@ -76,6 +76,9 @@ func (idx *Index) Close() error {
 	if idx.closed {
 		return nil
 	}
+	// 先置 closed，确保即使后续清理出错，索引仍被视为已关闭；
+	// Add/Search 等据此返回 ErrClosed，避免访问已置 nil 的 mem。
+	idx.closed = true
 	idx.mem = nil
 	if idx.wal != nil {
 		err := idx.wal.Close()

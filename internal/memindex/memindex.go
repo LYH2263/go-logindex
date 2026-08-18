@@ -59,12 +59,13 @@ func (m *Index) Delete(docID uint64) bool {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	_, ok := m.docs[docID]
+	text, ok := m.docs[docID]
 	if !ok {
 		m.deleted[docID] = struct{}{}
 		return false
 	}
-	delete(m.docs, docID)
+	// 删除倒排中该文档的词项，保证 Posting() 只返回存活文档（与段层墓碑语义一致）。
+	m.removeLocked(docID, text)
 	m.deleted[docID] = struct{}{}
 	return true
 }

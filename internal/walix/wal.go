@@ -57,8 +57,9 @@ func Open(dir string) (*WAL, error) {
 // Append 追加记录。
 func (w *WAL) Append(rec Record) error {
 	if FailNextAppend != nil {
+		err := FailNextAppend
 		FailNextAppend = nil
-		return nil
+		return err
 	}
 	if w == nil || w.f == nil {
 		return fmt.Errorf("walix: closed")

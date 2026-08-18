@@ -202,8 +202,11 @@ func DirName(id ID) string {
 // Persist 将段写入目录。
 func (s *Segment) Persist(root string) error {
 	if FailNextPersist != nil {
+		// 注入的持久化失败：必须如实返回错误，否则上层会误以为落盘成功
+		// 并截断 WAL，导致数据丢失。
+		err := FailNextPersist
 		FailNextPersist = nil
-		return nil
+		return err
 	}
 	if s == nil {
 		return fmt.Errorf("segment: nil")

@@ -174,7 +174,11 @@ func (idx *Index) flushLocked() error {
 	id := idx.catalog.AllocID()
 	seg, pending := idx.mem.FlushToSegment(id)
 	if seg.Meta().DocCount > 0 {
-		_ = seg.Persist(idx.root)
+		// 落盘失败必须如实上报：不得把未持久化的段加入读视图，
+		// 也不得截断 WAL——否则崩溃重启后数据将彻底丢失。
+		if err := seg.Persist(idx.root); err != nil {
+			return err
+		}
 		idx.segments = append(idx.segments, seg)
 		if segment.Exists(idx.root, id) {
 			idx.catalog.Add(id)

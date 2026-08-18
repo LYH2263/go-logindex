@@ -19,28 +19,30 @@ type Planner struct {
 
 // Eval 执行查询。
 func (p Planner) Eval(q *Query) (*posting.List, error) {
+	return p.EvalContext(context.Background(), q)
+}
+
+// EvalContext 带取消的求值；ctx 取消时立即返回其错误，不再继续求值。
+func (p Planner) EvalContext(ctx context.Context, q *Query) (*posting.List, error) {
 	if q == nil || q.IsEmpty() {
 		return posting.New(), nil
 	}
-	return p.eval(q)
+	return p.eval(ctx, q)
 }
 
-// EvalContext 带取消的求值；问题版忽略 ctx。
-func (p Planner) EvalContext(ctx context.Context, q *Query) (*posting.List, error) {
-	_ = ctx
-	return p.Eval(q)
-}
-
-func (p Planner) eval(q *Query) (*posting.List, error) {
+func (p Planner) eval(ctx context.Context, q *Query) (*posting.List, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	switch q.Kind {
 	case KindTerm:
 		return p.Src.Posting(q.Term), nil
 	case KindAnd:
-		return evalAnd(p, q.Kids)
+		return evalAnd(ctx, p, q.Kids)
 	case KindOr:
-		return evalOr(p, q.Kids)
+		return evalOr(ctx, p, q.Kids)
 	case KindNot:
-		return evalNot(p, q.Kids)
+		return evalNot(ctx, p, q.Kids)
 	default:
 		return posting.New(), nil
 	}

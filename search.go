@@ -5,6 +5,7 @@ import (
 
 	"github.com/LYH2263/go-logindex/internal/analyze"
 	"github.com/LYH2263/go-logindex/internal/collect"
+	"github.com/LYH2263/go-logindex/internal/posting"
 	"github.com/LYH2263/go-logindex/internal/query"
 )
 
@@ -27,6 +28,10 @@ func (idx *Index) Search(q Query) ([]Hit, error) {
 	if err != nil {
 		return nil, err
 	}
+	// 仅保留活文档。
+	live := src.Universe()
+	list = posting.Intersect(list, live)
+
 	var scorer collect.Scorer = collect.ConstScorer(1)
 	if idx.tf != nil {
 		terms := collectQueryTerms(q)

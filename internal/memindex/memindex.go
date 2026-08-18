@@ -59,12 +59,12 @@ func (m *Index) Delete(docID uint64) bool {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	_, ok := m.docs[docID]
+	text, ok := m.docs[docID]
 	if !ok {
 		m.deleted[docID] = struct{}{}
 		return false
 	}
-	delete(m.docs, docID)
+	m.removeLocked(docID, text)
 	m.deleted[docID] = struct{}{}
 	return true
 }

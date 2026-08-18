@@ -85,7 +85,9 @@ func (Merger) Merge(id segment.ID, parts []*segment.Segment) (*segment.Segment, 
 				termDocs[term] = set
 			}
 			for _, d := range list.Docs() {
-				live[d] = struct{}{}
+				if _, ok := live[d]; !ok {
+					continue
+				}
 				set[d] = struct{}{}
 			}
 		}

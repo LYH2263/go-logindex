@@ -202,8 +202,9 @@ func DirName(id ID) string {
 // Persist 将段写入目录。
 func (s *Segment) Persist(root string) error {
 	if FailNextPersist != nil {
+		err := FailNextPersist
 		FailNextPersist = nil
-		return nil
+		return err
 	}
 	if s == nil {
 		return fmt.Errorf("segment: nil")
@@ -218,7 +219,7 @@ func (s *Segment) Persist(root string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(dir, "meta.json"), metaBytes, 0o644); err != nil {
+	if err := writeSynced(filepath.Join(dir, "meta.json"), metaBytes); err != nil {
 		return err
 	}
 	// terms.bin: [u32 termLen][term][posting bytes]...
@@ -245,7 +246,7 @@ func (s *Segment) Persist(root string) error {
 		blob = append(blob, hdr[:]...)
 		blob = append(blob, enc...)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "postings.bin"), blob, 0o644); err != nil {
+	if err := writeSynced(filepath.Join(dir, "postings.bin"), blob); err != nil {
 		return err
 	}
 	// live docs
@@ -258,7 +259,23 @@ func (s *Segment) Persist(root string) error {
 	for i, d := range live {
 		binary.LittleEndian.PutUint64(lb[i*8:], d)
 	}
-	return os.WriteFile(filepath.Join(dir, "live.bin"), lb, 0o644)
+	return writeSynced(filepath.Join(dir, "live.bin"), lb)
+}
+
+func writeSynced(path string, data []byte) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return err
+	}
+	return f.Close()
 }
 
 // Load 从目录加载段。

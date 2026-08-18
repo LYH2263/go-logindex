@@ -174,11 +174,13 @@ func (idx *Index) flushLocked() error {
 	id := idx.catalog.AllocID()
 	seg, pending := idx.mem.FlushToSegment(id)
 	if seg.Meta().DocCount > 0 {
-		_ = seg.Persist(idx.root)
+		if err := seg.Persist(idx.root); err != nil {
+			return err
+		}
 		idx.segments = append(idx.segments, seg)
-		if segment.Exists(idx.root, id) {
-			idx.catalog.Add(id)
-			_ = segment.SaveCatalog(idx.root, idx.catalog)
+		idx.catalog.Add(id)
+		if err := segment.SaveCatalog(idx.root, idx.catalog); err != nil {
+			return err
 		}
 	}
 	for doc := range pending {

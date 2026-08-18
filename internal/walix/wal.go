@@ -56,9 +56,6 @@ func (w *WAL) Append(rec Record) error {
 	if w == nil || w.f == nil {
 		return fmt.Errorf("walix: closed")
 	}
-	if rec.Op == OpDelete {
-		rec.DocID = 0
-	}
 	payload, err := json.Marshal(rec)
 	if err != nil {
 		return err

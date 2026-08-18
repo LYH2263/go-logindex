@@ -133,6 +133,11 @@ func (idx *Index) Delete(docID uint64) error {
 	if idx.closed {
 		return ErrClosed
 	}
+	if idx.wal != nil {
+		if err := idx.wal.Append(walix.Record{Op: walix.OpDelete, DocID: docID}); err != nil {
+			return err
+		}
+	}
 	idx.mem.Delete(docID)
 	delete(idx.texts, docID)
 	for _, seg := range idx.segments {

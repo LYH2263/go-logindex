@@ -76,11 +76,9 @@ func (idx *Index) Close() error {
 	if idx.closed {
 		return nil
 	}
-	idx.mem = nil
+	idx.closed = true
 	if idx.wal != nil {
-		err := idx.wal.Close()
-		idx.wal = nil
-		return err
+		return idx.wal.Close()
 	}
 	return nil
 }

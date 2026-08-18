@@ -32,6 +32,9 @@ func New(a analyze.Analyzer) *Index {
 
 // Add 写入/覆盖文档。
 func (m *Index) Add(docID uint64, text string) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if old, ok := m.docs[docID]; ok {
@@ -90,6 +93,9 @@ func (m *Index) DocCount() int {
 
 // Posting 返回词项倒排拷贝。
 func (m *Index) Posting(term string) *posting.List {
+	if m == nil {
+		return posting.New()
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	term = analyze.Normalize(term)

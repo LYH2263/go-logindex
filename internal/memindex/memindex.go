@@ -15,7 +15,6 @@ type Index struct {
 	terms    map[string]map[uint64]struct{}
 	docs     map[uint64]string
 	deleted  map[uint64]struct{}
-	lists    map[string]*posting.List
 }
 
 // New 构造内存索引。
@@ -28,7 +27,6 @@ func New(a analyze.Analyzer) *Index {
 		terms:    make(map[string]map[uint64]struct{}),
 		docs:     make(map[uint64]string),
 		deleted:  make(map[uint64]struct{}),
-		lists:    make(map[string]*posting.List),
 	}
 }
 
@@ -52,7 +50,6 @@ func (m *Index) Add(docID uint64, text string) {
 		}
 		set[docID] = struct{}{}
 	}
-	m.lists = make(map[string]*posting.List)
 }
 
 // Delete 删除文档。
@@ -69,7 +66,6 @@ func (m *Index) Delete(docID uint64) bool {
 	}
 	m.removeLocked(docID, text)
 	m.deleted[docID] = struct{}{}
-	m.lists = make(map[string]*posting.List)
 	return true
 }
 
@@ -100,26 +96,18 @@ func (m *Index) Posting(term string) *posting.List {
 	if m == nil {
 		return posting.New()
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	term = analyze.Normalize(term)
 	set, ok := m.terms[term]
 	if !ok {
 		return posting.New()
 	}
-	if m.lists == nil {
-		m.lists = make(map[string]*posting.List)
-	}
-	if l, hit := m.lists[term]; hit {
-		return l
-	}
 	ids := make([]uint64, 0, len(set))
 	for d := range set {
 		ids = append(ids, d)
 	}
-	l := posting.New(ids...)
-	m.lists[term] = l
-	return l
+	return posting.New(ids...)
 }
 
 // LiveDocs 返回存活文档。

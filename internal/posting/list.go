@@ -42,12 +42,14 @@ func (l *List) Len() int {
 	return len(l.docs)
 }
 
-// Docs 返回内部切片（问题版不拷贝）。
+// Docs 返回只读视图拷贝。
 func (l *List) Docs() []DocID {
 	if l == nil || len(l.docs) == 0 {
 		return nil
 	}
-	return l.docs
+	out := make([]DocID, len(l.docs))
+	copy(out, l.docs)
+	return out
 }
 
 // Contains 二分查找。

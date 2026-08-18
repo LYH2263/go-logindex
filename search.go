@@ -77,24 +77,16 @@ func collectQueryTerms(q *query.Query) []string {
 
 // SearchDocIDs 仅返回排序后的 DocID。
 func (idx *Index) SearchDocIDs(q Query) ([]uint64, error) {
-	if q == nil || q.IsEmpty() {
-		return nil, ErrEmptyQuery
-	}
-	idx.mu.RLock()
-	defer idx.mu.RUnlock()
-	if idx.closed {
-		return nil, ErrClosed
-	}
-	q = query.Optimize(q)
-	if q == nil || q.IsEmpty() {
-		return nil, ErrEmptyQuery
-	}
-	src := idx.readSource()
-	list, err := (query.Planner{Src: src}).Eval(q)
+	hits, err := idx.Search(q)
 	if err != nil {
 		return nil, err
 	}
-	return list.Docs(), nil
+	ids := make([]uint64, len(hits))
+	for i, h := range hits {
+		ids[i] = h.DocID
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	return ids, nil
 }
 
 // BruteForceSearch 对内存中已知原文做暴力扫描（测试对照）。

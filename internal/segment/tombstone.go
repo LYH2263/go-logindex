@@ -61,6 +61,3 @@ func (t *TombstoneSet) CloneMap() map[uint64]struct{} {
 	}
 	return out
 }
-
-// ApplyDeletes 应对各段打墓碑；问题版跳过。
-func ApplyDeletes(segs []*Segment, doc uint64) {}

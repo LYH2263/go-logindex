@@ -246,7 +246,9 @@ func (idx *Index) recoverWAL() error {
 		case walix.OpAdd:
 			idx.mem.Add(r.DocID, r.Text)
 			idx.texts[r.DocID] = r.Text
-			segment.ApplyDeletes(idx.segments, r.DocID)
+			for _, seg := range idx.segments {
+				seg.MarkDeleted(r.DocID)
+			}
 			if idx.tf != nil {
 				idx.tf.AddDoc(r.DocID, analyze.TermFreq(idx.opts.Analyzer, r.Text))
 			}
@@ -256,7 +258,9 @@ func (idx *Index) recoverWAL() error {
 		case walix.OpDelete:
 			idx.mem.Delete(r.DocID)
 			delete(idx.texts, r.DocID)
-			segment.ApplyDeletes(idx.segments, r.DocID)
+			for _, seg := range idx.segments {
+				seg.MarkDeleted(r.DocID)
+			}
 			if idx.tf != nil {
 				idx.tf.RemoveDoc(r.DocID)
 			}

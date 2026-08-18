@@ -1,6 +1,7 @@
 package logindex
 
 import (
+	"context"
 	"sort"
 
 	"github.com/LYH2263/go-logindex/internal/analyze"
@@ -10,7 +11,8 @@ import (
 )
 
 // Search 执行布尔查询；结果按分数降序、DocID 升序。
-func (idx *Index) Search(q Query) ([]Hit, error) {
+func (idx *Index) Search(ctx context.Context, q Query) ([]Hit, error) {
+	_ = ctx
 	if q == nil || q.IsEmpty() {
 		return nil, ErrEmptyQuery
 	}
@@ -77,7 +79,7 @@ func collectQueryTerms(q *query.Query) []string {
 
 // SearchDocIDs 仅返回排序后的 DocID。
 func (idx *Index) SearchDocIDs(q Query) ([]uint64, error) {
-	hits, err := idx.Search(q)
+	hits, err := idx.Search(context.Background(), q)
 	if err != nil {
 		return nil, err
 	}

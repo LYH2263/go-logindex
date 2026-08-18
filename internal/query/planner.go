@@ -1,6 +1,8 @@
 package query
 
 import (
+	"context"
+
 	"github.com/LYH2263/go-logindex/internal/posting"
 )
 
@@ -21,6 +23,12 @@ func (p Planner) Eval(q *Query) (*posting.List, error) {
 		return posting.New(), nil
 	}
 	return p.eval(q)
+}
+
+// EvalContext 带取消的求值；问题版忽略 ctx。
+func (p Planner) EvalContext(ctx context.Context, q *Query) (*posting.List, error) {
+	_ = ctx
+	return p.Eval(q)
 }
 
 func (p Planner) eval(q *Query) (*posting.List, error) {

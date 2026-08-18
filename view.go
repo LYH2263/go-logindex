@@ -17,8 +17,12 @@ func (idx *Index) readSource() readSource {
 // Posting 合并各层倒排。
 func (r readSource) Posting(term string) *posting.List {
 	term = analyze.Normalize(term)
+	memList := r.idx.mem.Posting(term)
+	if len(r.idx.segments) == 0 {
+		return memList
+	}
 	lists := make([]*posting.List, 0, 1+len(r.idx.segments))
-	lists = append(lists, r.idx.mem.Posting(term))
+	lists = append(lists, memList)
 	for _, seg := range r.idx.segments {
 		lists = append(lists, seg.Posting(term))
 	}

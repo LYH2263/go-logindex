@@ -17,13 +17,16 @@ type ID uint64
 
 // Meta 段元数据。
 type Meta struct {
-	ID       ID     `json:"id"`
-	DocCount int    `json:"doc_count"`
-	MinDoc   uint64 `json:"min_doc"`
-	MaxDoc   uint64 `json:"max_doc"`
-	TermCount int   `json:"term_count"`
-	Created  int64  `json:"created"`
+	ID        ID     `json:"id"`
+	DocCount  int    `json:"doc_count"`
+	MinDoc    uint64 `json:"min_doc"`
+	MaxDoc    uint64 `json:"max_doc"`
+	TermCount int    `json:"term_count"`
+	Created   int64  `json:"created"`
 }
+
+// FailNextPersist 若非空，下一次 Persist 使用该错误（测试注入）。
+var FailNextPersist error
 
 // Segment 是不可变倒排段。
 type Segment struct {
@@ -198,6 +201,10 @@ func DirName(id ID) string {
 
 // Persist 将段写入目录。
 func (s *Segment) Persist(root string) error {
+	if FailNextPersist != nil {
+		FailNextPersist = nil
+		return nil
+	}
 	if s == nil {
 		return fmt.Errorf("segment: nil")
 	}

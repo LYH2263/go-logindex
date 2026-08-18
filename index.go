@@ -98,13 +98,11 @@ func (idx *Index) Add(docID uint64, text string) error {
 	if idx.closed {
 		return ErrClosed
 	}
-	if idx.wal != nil {
-		if err := idx.wal.Append(walix.Record{Op: walix.OpAdd, DocID: docID, Text: text}); err != nil {
-			return err
-		}
-	}
 	idx.mem.Add(docID, text)
 	idx.texts[docID] = text
+	if idx.wal != nil {
+		_ = idx.wal.Append(walix.Record{Op: walix.OpAdd, DocID: docID, Text: text})
+	}
 	// 从旧段墓碑：覆盖写入时删除旧段中同 ID。
 	for _, seg := range idx.segments {
 		seg.MarkDeleted(docID)

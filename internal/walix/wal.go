@@ -27,6 +27,9 @@ type Record struct {
 	Text  string `json:"text,omitempty"`
 }
 
+// FailNextAppend 若非空，下一次 Append 使用该错误（测试注入）。
+var FailNextAppend error
+
 // WAL 索引预写日志（与 KV-WAL 无关）。
 type WAL struct {
 	mu   sync.Mutex
@@ -53,6 +56,10 @@ func Open(dir string) (*WAL, error) {
 
 // Append 追加记录。
 func (w *WAL) Append(rec Record) error {
+	if FailNextAppend != nil {
+		FailNextAppend = nil
+		return nil
+	}
 	if w == nil || w.f == nil {
 		return fmt.Errorf("walix: closed")
 	}

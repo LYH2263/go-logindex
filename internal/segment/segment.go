@@ -180,9 +180,6 @@ func (s *Segment) AllPostings() map[string]*posting.List {
 	out := make(map[string]*posting.List, len(s.postings))
 	for term, l := range s.postings {
 		cp := l.Clone()
-		if len(s.tombstone) > 0 {
-			cp.RemoveSet(s.tombstone)
-		}
 		if cp.Len() == 0 {
 			continue
 		}

@@ -25,9 +25,13 @@ func (p Planner) Eval(q *Query) (*posting.List, error) {
 	return p.eval(q)
 }
 
-// EvalContext 带取消的求值；问题版忽略 ctx。
+// EvalContext 带取消的求值。
 func (p Planner) EvalContext(ctx context.Context, q *Query) (*posting.List, error) {
-	_ = ctx
+	if ctx != nil {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+	}
 	return p.Eval(q)
 }
 

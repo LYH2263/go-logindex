@@ -12,7 +12,6 @@ import (
 
 // Search 执行布尔查询；结果按分数降序、DocID 升序。
 func (idx *Index) Search(ctx context.Context, q Query) ([]Hit, error) {
-	_ = ctx
 	if q == nil || q.IsEmpty() {
 		return nil, ErrEmptyQuery
 	}
@@ -26,7 +25,7 @@ func (idx *Index) Search(ctx context.Context, q Query) ([]Hit, error) {
 		return nil, ErrEmptyQuery
 	}
 	src := idx.readSource()
-	list, err := (query.Planner{Src: src}).Eval(q)
+	list, err := (query.Planner{Src: src}).EvalContext(ctx, q)
 	if err != nil {
 		return nil, err
 	}

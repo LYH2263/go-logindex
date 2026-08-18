@@ -140,6 +140,9 @@ func (idx *Index) Delete(docID uint64) error {
 	}
 	idx.mem.Delete(docID)
 	delete(idx.texts, docID)
+	for _, seg := range idx.segments {
+		seg.MarkDeleted(docID)
+	}
 	if idx.tf != nil {
 		idx.tf.RemoveDoc(docID)
 	}
@@ -181,6 +184,9 @@ func (idx *Index) flushLocked() error {
 		}
 	}
 	for doc := range pending {
+		for _, s := range idx.segments {
+			s.MarkDeleted(doc)
+		}
 		delete(idx.texts, doc)
 	}
 	if idx.wal != nil {

@@ -175,14 +175,10 @@ func (m *Index) FlushToSegment(id segment.ID) (*segment.Segment, map[uint64]stru
 		b.AddDoc(doc, analyze.UniqueTerms(m.analyzer, text))
 	}
 	seg := b.Build(id)
-	pending := make(map[uint64]struct{}, len(m.deleted))
-	for d := range m.deleted {
-		pending[d] = struct{}{}
-	}
 	m.terms = make(map[string]map[uint64]struct{})
 	m.docs = make(map[uint64]string)
 	m.deleted = make(map[uint64]struct{})
-	return seg, pending
+	return seg, nil
 }
 
 // Clear 清空。

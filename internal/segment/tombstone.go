@@ -62,5 +62,9 @@ func (t *TombstoneSet) CloneMap() map[uint64]struct{} {
 	return out
 }
 
-// ApplyDeletes 应对各段打墓碑；问题版跳过。
-func ApplyDeletes(segs []*Segment, doc uint64) {}
+// ApplyDeletes 对各段打墓碑，删除同 ID 旧文档（覆盖写入或显式删除）。
+func ApplyDeletes(segs []*Segment, doc uint64) {
+	for _, seg := range segs {
+		seg.MarkDeleted(doc)
+	}
+}
